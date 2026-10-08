@@ -6,34 +6,35 @@ from datetime import date
 
 FILE_DATI = "storico_allenamenti.csv"
 
-# Database essenziale degli esercizi suddivisi per seduta
+# Database completo degli esercizi con parametri target previsti dalla scheda
 esercizi_db = {
     # SEDUTA 1: PETTO E BICIPITI
-    "Distensioni Manubri P. 30": "Seduta 1: Petto e Bicipiti",
-    "Chest Press": "Seduta 1: Petto e Bicipiti",
-    "Pec Fly": "Seduta 1: Petto e Bicipiti",
-    "Croci Man. P. 30": "Seduta 1: Petto e Bicipiti",
-    "Bicipiti Manubri Alt. P. 70": "Seduta 1: Petto e Bicipiti",
-    "Bicipiti Cavo Basso Asta D.": "Seduta 1: Petto e Bicipiti",
-    "Plank": "Seduta 1: Petto e Bicipiti",
-    "Crunch su Panca": "Seduta 1: Petto e Bicipiti",
+    "Distensioni Manubri P. 30": {"seduta": "Seduta 1: Petto e Bicipiti", "serie": 4, "reps": "8", "recupero": 90},
+    "Chest Press": {"seduta": "Seduta 1: Petto e Bicipiti", "serie": 4, "reps": "10", "recupero": 60},
+    "Pec Fly": {"seduta": "Seduta 1: Petto e Bicipiti", "serie": 4, "reps": "10", "recupero": 60},
+    "Croci Man. P. 30": {"seduta": "Seduta 1: Petto e Bicipiti", "serie": 3, "reps": "12", "recupero": 60},
+    "Bicipiti Manubri Alt. P. 70": {"seduta": "Seduta 1: Petto e Bicipiti", "serie": 4, "reps": "10", "recupero": 60},
+    "Bicipiti Cavo Basso Asta D.": {"seduta": "Seduta 1: Petto e Bicipiti", "serie": 4, "reps": "12", "recupero": 60},
+    "Plank": {"seduta": "Seduta 1: Petto e Bicipiti", "serie": 4, "reps": "Max", "recupero": 60},
+    "Crunch su Panca": {"seduta": "Seduta 1: Petto e Bicipiti", "serie": 3, "reps": "Max", "recupero": 60},
 
     # SEDUTA 2: GAMBE E TRICIPITI
-    "Leg Press 45": "Seduta 2: Gambe e Tricipiti",
-    "Leg Extension": "Seduta 2: Gambe e Tricipiti",
-    "Leg Curl": "Seduta 2: Gambe e Tricipiti",
-    "Calf Press": "Seduta 2: Gambe e Tricipiti",
-    "Triceps Press": "Seduta 2: Gambe e Tricipiti",
-    "Push Down Asta": "Seduta 2: Gambe e Tricipiti",
-    "Crunch Obliqui Panca": "Seduta 2: Gambe e Tricipiti",
+    "Leg Press 45": {"seduta": "Seduta 2: Gambe e Tricipiti", "serie": 4, "reps": "10", "recupero": 90},
+    "Leg Extension": {"seduta": "Seduta 2: Gambe e Tricipiti", "serie": 4, "reps": "10", "recupero": 60},
+    "Leg Curl": {"seduta": "Seduta 2: Gambe e Tricipiti", "serie": 4, "reps": "12", "recupero": 60},
+    "Calf Press": {"seduta": "Seduta 2: Gambe e Tricipiti", "serie": 3, "reps": "15", "recupero": 60},
+    "Triceps Press": {"seduta": "Seduta 2: Gambe e Tricipiti", "serie": 4, "reps": "12", "recupero": 60},
+    "Push Down Asta": {"seduta": "Seduta 2: Gambe e Tricipiti", "serie": 4, "reps": "12", "recupero": 60},
+    "Crunch Obliqui Panca": {"seduta": "Seduta 2: Gambe e Tricipiti", "serie": 3, "reps": "Max", "recupero": 60},
 
     # SEDUTA 3: DORSO E SPALLE
-    "Lat Machine Avanti": "Seduta 3: Dorso e Spalle",
-    "Seated Row": "Seduta 3: Dorso e Spalle",
-    "Shoulder Press": "Seduta 3: Dorso e Spalle",
-    "Rear Delt": "Seduta 3: Dorso e Spalle",
-    "Alzate Laterali P. 90": "Seduta 3: Dorso e Spalle",
-    "Reverse Crunch Panca": "Seduta 3: Dorso e Spalle"
+    "Lat Machine Avanti": {"seduta": "Seduta 3: Dorso e Spalle", "serie": 4, "reps": "8", "recupero": 90},
+    "Seated Row": {"seduta": "Seduta 3: Dorso e Spalle", "serie": 4, "reps": "10", "recupero": 60},
+    "Pulley Stretto": {"seduta": "Seduta 3: Dorso e Spalle", "serie": 3, "reps": "10", "recupero": 60},
+    "Shoulder Press": {"seduta": "Seduta 3: Dorso e Spalle", "serie": 4, "reps": "8", "recupero": 90},
+    "Rear Delt": {"seduta": "Seduta 3: Dorso e Spalle", "serie": 4, "reps": "10", "recupero": 60},
+    "Alzate Laterali P. 90": {"seduta": "Seduta 3: Dorso e Spalle", "serie": 3, "reps": "12", "recupero": 60},
+    "Reverse Crunch Panca": {"seduta": "Seduta 3: Dorso e Spalle", "serie": 3, "reps": "Max", "recupero": 60}
 }
 
 def carica_dati():
@@ -49,12 +50,26 @@ tab1, tab2 = st.tabs(["🏋️ Registra & Timer", "📊 Dashboard Statistiche"])
 with tab1:
     st.title("💪 Diario Allenamento & Recupero")
     
+    # Selezione della seduta e dell'esercizio
+    elenco_sedute = sorted(list(set(d["seduta"] for d in esercizi_db.values())))
+    seduta_selezionata = st.selectbox("Seleziona la Seduta", elenco_sedute)
+    
+    esercizi_disponibili = [nome for nome, info in esercizi_db.items() if info["seduta"] == seduta_selezionata]
+    esercizio_selezionato = st.selectbox("Seleziona Esercizio", esercizi_disponibili)
+    
+    # Dati target dell'esercizio prescelto
+    target = esercizi_db[esercizio_selezionato]
+    
+    # Scheda parametri consigliati
+    st.info(f"📋 **Target Scheda per {esercizio_selezionato}:** {target['serie']} Serie | {target['reps']} Ripetizioni | Recupero: {target['recupero']} sec")
+
     # Timer di Recupero Integrato
     with st.expander("⏱️ Timer di Recupero Serie", expanded=True):
         col_t1, col_t2 = st.columns([1, 2])
         with col_t1:
-            secondi_recupero = st.selectbox("Seleziona Recupero (secondi)", [60, 90, 120, 150, 180], index=2)
-            avvia_timer = st.button("▶️ Avvia Timer")
+            # Preseleziona il recupero suggerito dalla scheda
+            secondi_recupero = st.number_input("Recupero (secondi)", min_value=10, max_value=300, value=target["recupero"], step=10)
+            avvia_timer = st.button("▶️ Avvia Timer", use_container_width=True)
         with col_t2:
             placeholder_timer = st.empty()
             if avvia_timer:
@@ -65,30 +80,26 @@ with tab1:
                 placeholder_timer.success("🔔 Tempo di recupero terminato! Pronto per la prossima serie.")
 
     st.markdown("---")
+    st.header("📝 Registra Allenamento")
     
-    elenco_sedute = sorted(list(set(esercizi_db.values())))
-    seduta_selezionata = st.selectbox("Seleziona la Seduta", elenco_sedute)
-    esercizi_disponibili = [nome for nome, seduta in esercizi_db.items() if seduta == seduta_selezionata]
-
-    st.header("Registra Esercizio")
     c1, c2 = st.columns(2)
     with c1:
         data_allenamento = st.date_input("Data", date.today())
-        esercizio_selezionato = st.selectbox("Esercizio", esercizi_disponibili)
-        serie = st.number_input("Serie completate", min_value=1, max_value=10, value=4)
+        serie_eseguite = st.number_input("Serie completate", min_value=1, max_value=10, value=target["serie"])
     with c2:
-        ripetizioni = st.text_input("Ripetizioni eseguite (es. 10-10-8-8)", "10")
+        ripetizioni_eseguite = st.text_input("Ripetizioni eseguite (es. 10-10-8-8)", value=str(target["reps"]))
         carico = st.number_input("Carico Utilizzato (kg)", min_value=0.0, step=1.0)
-        note = st.text_area("Note e sensazioni post-workout")
         
-    if st.button("Salva Allenamento", use_container_width=True):
+    note = st.text_area("Note e sensazioni post-workout")
+        
+    if st.button("💾 Salva Allenamento", use_container_width=True):
         df = carica_dati()
         nuovo_dato = pd.DataFrame([{
             "Data": data_allenamento,
             "Seduta": seduta_selezionata,
             "Esercizio": esercizio_selezionato,
-            "Serie": serie,
-            "Ripetizioni": ripetizioni,
+            "Serie": serie_eseguite,
+            "Ripetizioni": ripetizioni_eseguite,
             "Carico (kg)": carico,
             "Note": note
         }])
