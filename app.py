@@ -1,99 +1,39 @@
 import streamlit as st
 import pandas as pd
 import os
-import requests
-from PIL import Image
-from io import BytesIO
+import time
 from datetime import date
 
 FILE_DATI = "storico_allenamenti.csv"
-CARTELLA_IMMAGINI = "img_esercizi"
 
+# Database essenziale degli esercizi suddivisi per seduta
 esercizi_db = {
-    "Distensioni Manubri P. 30": {
-        "seduta": "Seduta 1: Petto e Bicipiti",
-        "url": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600"
-    },
-    "Chest Press": {
-        "seduta": "Seduta 1: Petto e Bicipiti",
-        "url": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600"
-    },
-    "Pec Fly": {
-        "seduta": "Seduta 1: Petto e Bicipiti",
-        "url": "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=600"
-    },
-    "Croci Man. P. 30": {
-        "seduta": "Seduta 1: Petto e Bicipiti",
-        "url": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600"
-    },
-    "Bicipiti Manubri Alt. P. 70": {
-        "seduta": "Seduta 1: Petto e Bicipiti",
-        "url": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600"
-    },
-    "Bicipiti Cavo Basso Asta D.": {
-        "seduta": "Seduta 1: Petto e Bicipiti",
-        "url": "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=600"
-    },
-    "Plank": {
-        "seduta": "Seduta 1: Petto e Bicipiti",
-        "url": "https://images.unsplash.com/photo-1566241142559-40e1dab266c6?w=600"
-    },
-    "Crunch su Panca": {
-        "seduta": "Seduta 1: Petto e Bicipiti",
-        "url": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600"
-    },
-    "Leg Press 45": {
-        "seduta": "Seduta 2: Gambe e Tricipiti",
-        "url": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600"
-    },
-    "Leg Extension": {
-        "seduta": "Seduta 2: Gambe e Tricipiti",
-        "url": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600"
-    },
-    "Leg Curl": {
-        "seduta": "Seduta 2: Gambe e Tricipiti",
-        "url": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600"
-    },
-    "Calf Press": {
-        "seduta": "Seduta 2: Gambe e Tricipiti",
-        "url": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600"
-    },
-    "Triceps Press": {
-        "seduta": "Seduta 2: Gambe e Tricipiti",
-        "url": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600"
-    },
-    "Push Down Asta": {
-        "seduta": "Seduta 2: Gambe e Tricipiti",
-        "url": "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=600"
-    },
-    "Crunch Obliqui Panca": {
-        "seduta": "Seduta 2: Gambe e Tricipiti",
-        "url": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600"
-    },
-    "Lat Machine Avanti": {
-        "seduta": "Seduta 3: Dorso e Spalle",
-        "url": "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=600"
-    },
-    "Seated Row": {
-        "seduta": "Seduta 3: Dorso e Spalle",
-        "url": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600"
-    },
-    "Shoulder Press": {
-        "seduta": "Seduta 3: Dorso e Spalle",
-        "url": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600"
-    },
-    "Rear Delt": {
-        "seduta": "Seduta 3: Dorso e Spalle",
-        "url": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600"
-    },
-    "Alzate Laterali P. 90": {
-        "seduta": "Seduta 3: Dorso e Spalle",
-        "url": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600"
-    },
-    "Reverse Crunch Panca": {
-        "seduta": "Seduta 3: Dorso e Spalle",
-        "url": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600"
-    }
+    # SEDUTA 1: PETTO E BICIPITI
+    "Distensioni Manubri P. 30": "Seduta 1: Petto e Bicipiti",
+    "Chest Press": "Seduta 1: Petto e Bicipiti",
+    "Pec Fly": "Seduta 1: Petto e Bicipiti",
+    "Croci Man. P. 30": "Seduta 1: Petto e Bicipiti",
+    "Bicipiti Manubri Alt. P. 70": "Seduta 1: Petto e Bicipiti",
+    "Bicipiti Cavo Basso Asta D.": "Seduta 1: Petto e Bicipiti",
+    "Plank": "Seduta 1: Petto e Bicipiti",
+    "Crunch su Panca": "Seduta 1: Petto e Bicipiti",
+
+    # SEDUTA 2: GAMBE E TRICIPITI
+    "Leg Press 45": "Seduta 2: Gambe e Tricipiti",
+    "Leg Extension": "Seduta 2: Gambe e Tricipiti",
+    "Leg Curl": "Seduta 2: Gambe e Tricipiti",
+    "Calf Press": "Seduta 2: Gambe e Tricipiti",
+    "Triceps Press": "Seduta 2: Gambe e Tricipiti",
+    "Push Down Asta": "Seduta 2: Gambe e Tricipiti",
+    "Crunch Obliqui Panca": "Seduta 2: Gambe e Tricipiti",
+
+    # SEDUTA 3: DORSO E SPALLE
+    "Lat Machine Avanti": "Seduta 3: Dorso e Spalle",
+    "Seated Row": "Seduta 3: Dorso e Spalle",
+    "Shoulder Press": "Seduta 3: Dorso e Spalle",
+    "Rear Delt": "Seduta 3: Dorso e Spalle",
+    "Alzate Laterali P. 90": "Seduta 3: Dorso e Spalle",
+    "Reverse Crunch Panca": "Seduta 3: Dorso e Spalle"
 }
 
 def carica_dati():
@@ -102,39 +42,46 @@ def carica_dati():
     else:
         return pd.DataFrame(columns=["Data", "Seduta", "Esercizio", "Serie", "Ripetizioni", "Carico (kg)", "Note"])
 
-def mostra_immagine(url_o_percorso, didascalia):
-    try:
-        if os.path.exists(url_o_percorso):
-            st.image(url_o_percorso, caption=didascalia, use_container_width=True)
-        else:
-            headers = {'User-Agent': 'Mozilla/5.0'}
-            response = requests.get(url_o_percorso, headers=headers, timeout=5)
-            img = Image.open(BytesIO(response.content))
-            st.image(img, caption=didascalia, use_container_width=True)
-    except Exception:
-        st.info("Immagine non disponibile al momento.")
-
 st.set_page_config(page_title="Diario Allenamento Ipertrofia", layout="wide")
-st.title("💪 Diario Allenamento - Massa Muscolare")
 
-elenco_sedute = sorted(list(set(info["seduta"] for info in esercizi_db.values())))
-seduta_selezionata = st.selectbox("Seleziona la Seduta", elenco_sedute)
+tab1, tab2 = st.tabs(["🏋️ Registra & Timer", "📊 Dashboard Statistiche"])
 
-esercizi_disponibili = [nome for nome, info in esercizi_db.items() if info["seduta"] == seduta_selezionata]
+with tab1:
+    st.title("💪 Diario Allenamento & Recupero")
+    
+    # Timer di Recupero Integrato
+    with st.expander("⏱️ Timer di Recupero Serie", expanded=True):
+        col_t1, col_t2 = st.columns([1, 2])
+        with col_t1:
+            secondi_recupero = st.selectbox("Seleziona Recupero (secondi)", [60, 90, 120, 150, 180], index=2)
+            avvia_timer = st.button("▶️ Avvia Timer")
+        with col_t2:
+            placeholder_timer = st.empty()
+            if avvia_timer:
+                for secondi in range(secondi_recupero, -1, -1):
+                    mins, secs = divmod(secondi, 60)
+                    placeholder_timer.metric("Tempo Rimanente", f"{mins:02d}:{secs:02d}")
+                    time.sleep(1)
+                placeholder_timer.success("🔔 Tempo di recupero terminato! Pronto per la prossima serie.")
 
-col1, col2 = st.columns([1, 1])
+    st.markdown("---")
+    
+    elenco_sedute = sorted(list(set(esercizi_db.values())))
+    seduta_selezionata = st.selectbox("Seleziona la Seduta", elenco_sedute)
+    esercizi_disponibili = [nome for nome, seduta in esercizi_db.items() if seduta == seduta_selezionata]
 
-with col1:
     st.header("Registra Esercizio")
-    data_allenamento = st.date_input("Data", date.today())
-    esercizio_selezionato = st.selectbox("Esercizio", esercizi_disponibili)
-    
-    serie = st.number_input("Serie completate", min_value=1, max_value=10, value=4)
-    ripetizioni = st.text_input("Ripetizioni eseguite (es. 10-10-8-8)", "10")
-    carico = st.number_input("Carico Utilizzato (kg)", min_value=0.0, step=1.0)
-    note = st.text_area("Note (es. 'Buon pump, nessuna vertigine')")
-    
-    if st.button("Salva Allenamento"):
+    c1, c2 = st.columns(2)
+    with c1:
+        data_allenamento = st.date_input("Data", date.today())
+        esercizio_selezionato = st.selectbox("Esercizio", esercizi_disponibili)
+        serie = st.number_input("Serie completate", min_value=1, max_value=10, value=4)
+    with c2:
+        ripetizioni = st.text_input("Ripetizioni eseguite (es. 10-10-8-8)", "10")
+        carico = st.number_input("Carico Utilizzato (kg)", min_value=0.0, step=1.0)
+        note = st.text_area("Note e sensazioni post-workout")
+        
+    if st.button("Salva Allenamento", use_container_width=True):
         df = carica_dati()
         nuovo_dato = pd.DataFrame([{
             "Data": data_allenamento,
@@ -149,21 +96,46 @@ with col1:
         df.to_csv(FILE_DATI, index=False)
         st.success(f"Dati salvati per: {esercizio_selezionato}")
 
-with col2:
-    st.header("Esecuzione Esercizio")
-    nome_immagine_locale = esercizio_selezionato.replace(" ", "_") + ".jpg"
-    percorso_locale = os.path.join(CARTELLA_IMMAGINI, nome_immagine_locale)
-    
-    if os.path.exists(percorso_locale):
-        mostra_immagine(percorso_locale, f"{esercizio_selezionato} (Locale)")
-    elif esercizio_selezionato in esercizi_db:
-        url_immagine = esercizi_db[esercizio_selezionato]["url"]
-        mostra_immagine(url_immagine, f"{esercizio_selezionato}")
+    st.markdown("---")
+    st.header("📜 Registro Ultimi Allenamenti")
+    df_storico = carica_dati()
+    if not df_storico.empty:
+        st.dataframe(df_storico.sort_values(by="Data", ascending=False), use_container_width=True)
+    else:
+        st.info("Nessun dato registrato. Inizia l'allenamento!")
 
-st.markdown("---")
-st.header("📊 Storico Progressioni")
-df_storico = carica_dati()
-if not df_storico.empty:
-    st.dataframe(df_storico.sort_values(by="Data", ascending=False), use_container_width=True)
-else:
-    st.info("Nessun dato registrato.")
+with tab2:
+    st.title("📈 Dashboard Analitica e Progressioni")
+    df_storico = carica_dati()
+    
+    if not df_storico.empty:
+        totale_sessioni = df_storico["Data"].nunique()
+        totale_esercizi = len(df_storico)
+        carico_max_assoluto = df_storico["Carico (kg)"].max()
+        
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Sessioni Totali", totale_sessioni)
+        m2.metric("Esercizi Registrati", totale_esercizi)
+        m3.metric("Record Carico Assoluto", f"{carico_max_assoluto} kg")
+        
+        st.markdown("---")
+        st.subheader("📊 Progressione del Carico (kg) nel Tempo")
+        
+        tutti_esercizi = sorted(df_storico["Esercizio"].unique())
+        ex_scelto = st.selectbox("Seleziona l'Esercizio da Analizzare", tutti_esercizi)
+        
+        df_ex = df_storico[df_storico["Esercizio"] == ex_scelto].copy()
+        df_ex["Data"] = pd.to_datetime(df_ex["Data"])
+        df_ex = df_ex.sort_values("Data")
+        
+        if not df_ex.empty:
+            st.line_chart(data=df_ex, x="Data", y="Carico (kg)", use_container_width=True)
+            
+            st.subheader("🏆 Record Personale (PR)")
+            pr_row = df_ex.loc[df_ex["Carico (kg)"].idxmax()]
+            st.write(f"**Massimo Carico Sollevato:** {pr_row['Carico (kg)']} kg il {pr_row['Data'].strftime('%d/%m/%Y')} ({pr_row['Serie']} serie x {pr_row['Ripetizioni']} rep)")
+        else:
+            st.info("Nessun dato disponibile per questo esercizio.")
+            
+    else:
+        st.info("Registra almeno un allenamento nella prima scheda per sbloccare la dashboard e i grafici!")
